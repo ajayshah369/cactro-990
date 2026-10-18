@@ -1,0 +1,22 @@
+model Booking {
+  id             String    @id @default(cuid())
+  customerId     String
+  eventId        String
+  quantity       Int
+  // Snapshot the event price and currency when the booking is created.
+  unitPrice      Int
+  totalAmount    Int
+  currency       String    @default("INR") @db.Char(3)
+  // Reuse this key when retrying the same request, not for a new purchase.
+  idempotencyKey String    @db.VarChar(128)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt      DateTime? @db.Timestamptz(3)
+
+  customer User  @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Restrict)
+  event    Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, idempotencyKey])
+  @@index([customerId, createdAt, id])
+  @@index([eventId, customerId])
+  @@map("bookings")
+}

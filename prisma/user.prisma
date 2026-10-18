@@ -1,0 +1,21 @@
+enum UserRole {
+  ORGANIZER
+  CUSTOMER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String    @db.VarChar(100)
+  // Normalize to lowercase and trim whitespace before saving or looking up emails.
+  email        String    @unique @db.VarChar(254)
+  passwordHash String
+  role         UserRole  @default(CUSTOMER)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt    DateTime? @db.Timestamptz(3)
+
+  organizedEvents Event[]   @relation("OrganizerEvents")
+  bookings        Booking[] @relation("CustomerBookings")
+
+  @@map("users")
+}

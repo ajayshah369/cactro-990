@@ -1,0 +1,32 @@
+enum EventStatus {
+  PUBLISHED
+  CANCELLED
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  organizerId      String
+  title            String      @db.VarChar(200)
+  description      String
+  venue            String      @db.VarChar(300)
+  startsAt         DateTime    @db.Timestamptz(3)
+  endsAt           DateTime    @db.Timestamptz(3)
+  capacity         Int
+  // Initialize to capacity; change inventory atomically with booking creation.
+  remainingTickets Int
+  // Integer minor units: 10000 represents INR 100.00.
+  ticketPrice      Int
+  currency         String      @default("INR") @db.Char(3)
+  // Cancel events instead of deleting rows referenced by bookings.
+  status           EventStatus @default(PUBLISHED)
+  createdAt        DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime    @updatedAt @db.Timestamptz(3)
+  deletedAt        DateTime?   @db.Timestamptz(3)
+
+  organizer User      @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Restrict)
+  bookings  Booking[]
+
+  @@index([organizerId, createdAt, id])
+  @@index([status, startsAt, id])
+  @@map("events")
+}
