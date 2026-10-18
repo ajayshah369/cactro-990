@@ -15,5 +15,13 @@ export const envSchema = z.object({
 
   DB_PASSWORD: z.string().min(1, "DB_PASSWORD is required"),
 
-  BE_URL: z.string().min(1, "BE_URL is required"),
+  BE_URL: z.url()
+    .transform((value) => new URL(value).toString())
+    .refine((value) => /^https?:\/\//i.test(value), {
+      message: "BE_URL must use http or https",
+    }),
+
+  JWT_SECRET: z.string().min(32, "JWT_SECRET must contain at least 32 characters"),
+
+  JWT_ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(86400).default(900),
 });
