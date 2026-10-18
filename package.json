@@ -18,7 +18,8 @@
     "generate": "npx prisma generate",
     "check-db": "npx tsx src/check-db.ts",
     "test:auth": "node --import tsx --test tests/auth.integration.test.ts",
-    "test:events": "node --import tsx --test tests/events.integration.test.ts"
+    "test:events": "node --import tsx --test tests/events.integration.test.ts",
+    "test:bookings": "node --import tsx --test tests/bookings.integration.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

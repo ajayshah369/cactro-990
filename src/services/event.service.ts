@@ -102,7 +102,7 @@ export async function getOrganizerEvent(eventId: string, organizerId: string) {
 }
 
 async function lockOwnedEvent(tx: Prisma.TransactionClient, eventId: string, organizerId: string) {
-  // Parameterized SQL. Future booking transactions must update/lock this same row.
+  // Parameterized SQL. Booking transactions lock this same row.
   const [event] = await tx.$queryRaw<Event[]>`
     SELECT * FROM "events" WHERE "id" = ${eventId} FOR UPDATE
   `;

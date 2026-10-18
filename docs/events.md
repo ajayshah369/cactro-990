@@ -1,6 +1,6 @@
 # Event management and browsing
 
-This increment implements event creation, updates, cancellation, public browsing, and the organizer's event history. Booking endpoints and notification jobs are later steps.
+This increment implements event creation, updates, cancellation, public browsing, and the organizer's event history. Customer booking endpoints are documented in [bookings.md](bookings.md). Notification jobs are the next step.
 
 The request flow is:
 
@@ -69,7 +69,7 @@ Updates lock the event row using `SELECT ... FOR UPDATE` inside a short transact
 
 Sold tickets are tracked as `capacity - remainingTickets`. For example, if capacity is 100 and 30 tickets are sold, increasing capacity to 150 makes 120 tickets available. Reducing capacity below 30 returns `409`. Changing a price or description does not reset inventory, and existing booking price snapshots are unchanged.
 
-The booking feature must reserve inventory and create its booking in one transaction, using this same event row for concurrency control. Directly inserting a booking without adjusting inventory would violate that contract.
+The booking feature reserves inventory and creates its booking in one transaction, using this same event row for concurrency control. Directly inserting a booking without adjusting inventory would violate that contract.
 
 `DELETE` marks the row `CANCELLED` and sets `deletedAt`. It preserves the event, all bookings, and inventory history. The event disappears from public browsing but remains in the owner's history. Repeating the deletion returns `204` without changing the original deletion timestamp. Editing a cancelled/deleted event returns `409`.
 
