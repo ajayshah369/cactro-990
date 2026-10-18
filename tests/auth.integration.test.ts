@@ -96,15 +96,14 @@ test("authentication API", async (t) => {
       name: " Customer ", email: ` ${customerEmail.toUpperCase()} `, password,
     });
     assert.equal(result.status, 201);
-    assert.equal(result.body.data.user.name, "Customer");
-    assert.equal(result.body.data.user.email, customerEmail);
-    assert.equal(result.body.data.user.role, "CUSTOMER");
-    assert.equal(result.body.data.expiresIn, env.JWT_ACCESS_TOKEN_TTL_SECONDS);
+    assert.equal(result.body.data.name, "Customer");
+    assert.equal(result.body.data.email, customerEmail);
+    assert.equal(result.body.data.role, "CUSTOMER");
     assert.equal("accessToken" in result.body.data, false);
     assert.equal("tokenType" in result.body.data, false);
-    assert.equal("passwordHash" in result.body.data.user, false);
+    assert.equal("passwordHash" in result.body.data, false);
     assert.equal(result.headers.get("cache-control"), "no-store");
-    customerId = result.body.data.user.id;
+    customerId = result.body.data.id;
     customerToken = tokenFromCookie(result.headers);
     const { payload } = await jwtVerify(customerToken, new TextEncoder().encode(env.JWT_SECRET));
     assert.equal(payload.sub, customerId);
@@ -120,7 +119,7 @@ test("authentication API", async (t) => {
       name: "Organizer", email: organizerEmail, password, role: "ORGANIZER",
     });
     assert.equal(result.status, 201);
-    assert.equal(result.body.data.user.role, "ORGANIZER");
+    assert.equal(result.body.data.role, "ORGANIZER");
     organizerToken = tokenFromCookie(result.headers);
     const { payload } = await jwtVerify(organizerToken, new TextEncoder().encode(env.JWT_SECRET));
     assert.equal(payload.role, "ORGANIZER");
@@ -146,13 +145,13 @@ test("authentication API", async (t) => {
   await t.test("login normalizes email and sets a usable HTTP-only cookie", async () => {
     const result = await request("/auth/login", { email: ` ${customerEmail.toUpperCase()} `, password });
     assert.equal(result.status, 200);
-    assert.equal("passwordHash" in result.body.data.user, false);
+    assert.equal("passwordHash" in result.body.data, false);
     assert.equal("accessToken" in result.body.data, false);
     customerToken = tokenFromCookie(result.headers);
     const profile = await request("/auth/me", undefined, customerToken);
     assert.equal(profile.status, 200);
-    assert.equal(profile.body.data.user.id, customerId);
-    assert.equal("passwordHash" in profile.body.data.user, false);
+    assert.equal(profile.body.data.id, customerId);
+    assert.equal("passwordHash" in profile.body.data, false);
   });
 
   await t.test("production cookies have the Secure attribute", async () => {

@@ -4,7 +4,7 @@ The request flow is:
 
 `auth.route.ts -> rate limiter -> validateBody(Zod schema) -> controller -> auth service -> Prisma`
 
-- `src/schemas/auth.schema.ts` validates requests, normalizes email, and supplies the default `CUSTOMER` role. Passwords are preserved exactly as entered. Registration requires 12–128 characters.
+- `src/schemas/auth.schema.ts` validates requests, normalizes email, and supplies the default `CUSTOMER` role. Passwords are preserved exactly as entered; the schema defines their allowed length.
 - `src/api/routes/auth.route.ts` connects endpoints to middleware and controllers.
 - `src/api/controllers/auth.controller.ts` reads validated input, sets or clears the auth cookie, and returns HTTP responses.
 - `src/services/auth.service.ts` hashes/verifies passwords, accesses users, handles duplicate emails, and creates authentication results.
@@ -55,14 +55,11 @@ Registration returns `201`; login returns `200`. Both set an HTTP-only cookie co
 {
   "success": true,
   "data": {
-    "user": {
-      "id": "<cuid>",
-      "name": "Demo Customer",
-      "email": "customer@example.com",
-      "role": "CUSTOMER",
-      "createdAt": "<timestamp>"
-    },
-    "expiresIn": 900
+    "id": "<cuid>",
+    "name": "Demo Customer",
+    "email": "customer@example.com",
+    "role": "CUSTOMER",
+    "createdAt": "<timestamp>"
   }
 }
 ```
@@ -101,7 +98,7 @@ The signed JWT payload contains:
 
 `role` is either `CUSTOMER` or `ORGANIZER` and is checked during token verification. It reflects the role when the token was issued. Authorization still uses the current database role so permission changes take effect immediately. Tokens issued before this change lack the role claim and require a fresh login.
 
-In a browser, the cookie is sent automatically for same-origin requests. You can use `fetch('/auth/me', { credentials: 'include' })`; JavaScript cannot read the HTTP-only cookie. Get the displayed role from the response's `data.user.role`. No Authorization header or localStorage token is needed. Keep the curl cookie jar private because it contains an active credential.
+In a browser, the cookie is sent automatically for same-origin requests. You can use `fetch('/auth/me', { credentials: 'include' })`; JavaScript cannot read the HTTP-only cookie. Get the displayed role from the response's `data.role`. No Authorization header or localStorage token is needed. Keep the curl cookie jar private because it contains an active credential.
 
 ## Expected behavior
 
