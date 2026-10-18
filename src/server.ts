@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import router from "./api/routes/index.route.js";
 import { verifyRequestOrigin } from "./middlewares/verifyRequestOrigin.js";
+import { docsRouter } from "./api/routes/docs.route.js";
 
 export const app = express();
 
@@ -25,6 +26,7 @@ app.get("/health", (_req, res) => {
 });
 
 // Register your API routes here.
+app.use(docsRouter);
 app.use(router);
 
 // 4. Handle requests that did not match any route.
