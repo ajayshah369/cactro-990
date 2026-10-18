@@ -9,6 +9,8 @@ import { docsRouter } from "./api/routes/docs.route.js";
 
 export const app = express();
 
+app.set("trust proxy", "loopback");
+
 // 1. Log requests, including their final status and response time.
 app.use(morgan(":method :url :status :response-time ms"));
 

@@ -30,7 +30,7 @@ async function initialize(): Promise<void> {
   console.log("PostgreSQL connected successfully");
 
   await new Promise<void>((resolve, reject) => {
-    server = app.listen(env.PORT, (error?: Error) => {
+    server = app.listen(env.PORT, "127.0.0.1", (error?: Error) => {
       if (error) {
         reject(error);
         return;
