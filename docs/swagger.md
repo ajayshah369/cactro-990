@@ -24,6 +24,8 @@ The document describes all 15 current API operations: health, registration, logi
 
 For booking examples, replace the sample event ID with an actual event ID from `GET /events`. Reuse a key for retries of one purchase; use a new key for a new purchase. The event creation example generates future dates when the server starts. If the server has been running more than a week, enter future dates before executing that example.
 
+Run `npm run worker:dev` in a second terminal to see simulated booking confirmations and event update notifications while trying these APIs. Jobs stay in PostgreSQL when the worker is stopped. See [notifications.md](notifications.md) for the complete flow.
+
 ## How it is maintained
 
 - `src/docs/openapi.ts` defines the OpenAPI 3.0.3 document. Request schemas come from the existing Zod validators through `z.toJSONSchema`, using its OpenAPI target. Input mode preserves strings before date transformations. Pagination uses output mode to expose integer bounds and defaults. Descriptions cover rules that JSON Schema cannot express, such as future dates and ownership. Response schemas describe the JSON actually returned by controllers.

@@ -8,6 +8,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "worker:dev": "tsx watch src/worker.ts",
+    "worker": "node dist/worker.js",
     "lint": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
@@ -20,7 +22,8 @@
     "test:auth": "node --import tsx --test tests/auth.integration.test.ts",
     "test:events": "node --import tsx --test tests/events.integration.test.ts",
     "test:bookings": "node --import tsx --test tests/bookings.integration.test.ts",
-    "test:docs": "node --import tsx --test tests/docs.integration.test.ts"
+    "test:docs": "node --import tsx --test tests/docs.integration.test.ts",
+    "test:notifications": "node --import tsx --test tests/notifications.integration.test.ts"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^13.1.0",

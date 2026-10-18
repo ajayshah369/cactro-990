@@ -1,6 +1,6 @@
 # Event management and browsing
 
-This increment implements event creation, updates, cancellation, public browsing, and the organizer's event history. Customer booking endpoints are documented in [bookings.md](bookings.md). Notification jobs are the next step.
+This increment implements event creation, updates, cancellation, public browsing, and the organizer's event history. See [bookings.md](bookings.md) for customer bookings and [notifications.md](notifications.md) for background notifications.
 
 The request flow is:
 
@@ -73,6 +73,8 @@ The booking feature reserves inventory and creates its booking in one transactio
 
 `DELETE` marks the row `CANCELLED` and sets `deletedAt`. It preserves the event, all bookings, and inventory history. The event disappears from public browsing but remains in the owner's history. Repeating the deletion returns `204` without changing the original deletion timestamp. Editing a cancelled/deleted event returns `409`.
 
+An update that changes event details, or the first cancellation, queues one notification per active customer with a non-deleted booking. Multiple bookings by the same customer produce one update notification. The jobs and event change commit in the same transaction. A patch with unchanged values and a repeated cancellation do not queue notifications. Run the separate worker to log these messages; delivery is currently simulated.
+
 ## Try it
 
 Run `npm run dev`. These examples use port `8000`; adjust it to your `.env` setting. First register an organizer and save the HTTP-only auth cookie:
@@ -119,4 +121,4 @@ npm run test:auth
 
 The event suite uses the configured PostgreSQL database and a random local HTTP port. It creates unique test accounts, events, and a booking fixture, then removes only those records. It covers authentication, ownership, validation, filtering, pagination, partial updates, concurrent date/capacity changes, and cancellation with existing bookings.
 
-No database migration is needed for these endpoints. The checks in this increment are enforced by request validation and transactional service logic; additional SQL `CHECK` constraints have not been added.
+Apply all migrations with `npx prisma migrate deploy`, including the notification queue migration, before using event updates or cancellation. Date and inventory checks are enforced by request validation and transactional service logic; additional SQL `CHECK` constraints have not been added.

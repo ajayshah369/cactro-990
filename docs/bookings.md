@@ -57,8 +57,8 @@ For a new purchase, the service runs a short transaction:
 1. Lock the event row with `SELECT ... FOR UPDATE`, matching organizer updates/cancellation.
 2. Recheck the idempotency key in case another request completed while this one waited.
 3. Check that the event exists, is published, is not deleted, has not started, and has enough tickets.
-4. Decrement `remainingTickets` and insert the booking with the event's price snapshot.
-5. Commit both changes together. A failure rolls both back.
+4. Decrement `remainingTickets`, insert the booking with the event's price snapshot, and insert its confirmation notification job.
+5. Commit all three changes together. A failure rolls all three back.
 
 The transaction explicitly uses `READ COMMITTED` so the recheck can see a preceding request's commit after waiting for the event lock. A unique-key conflict between requests for different events is handled after rollback, so the losing request does not consume inventory.
 
@@ -92,4 +92,4 @@ Run `npm run test:bookings` against the configured PostgreSQL database. The suit
 
 The concurrency checks send 20 booking requests for five tickets and eight retries for one ticket. They verify correctness; they do not measure the system's maximum concurrent-user capacity. The deployment stress scenario and before/after performance measurements remain a separate step.
 
-No database migration or new dependency is needed. Email notifications are the next feature. This step does not process payments, refunds, or customer booking cancellations.
+Apply all migrations with `npx prisma migrate deploy`, including the notification queue migration. Every new booking queues one confirmation; an idempotent replay does not create another job. The separate worker currently logs simulated messages. See [notifications.md](notifications.md) for setup and delivery behavior. Payments, refunds, and customer booking cancellations are not implemented.

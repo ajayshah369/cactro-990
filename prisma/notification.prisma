@@ -1,0 +1,40 @@
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  EVENT_UPDATED
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model NotificationJob {
+  id          String             @id @default(cuid())
+  type        NotificationType
+  status      NotificationStatus @default(PENDING)
+  eventId     String
+  customerId  String
+  // At most one confirmation job per booking. Update jobs have no bookingId.
+  bookingId   String?            @unique
+  // Freeze the recipient and message at the time of the business operation.
+  payload     Json
+  attempts    Int                @default(0)
+  availableAt DateTime           @default(now()) @db.Timestamptz(3)
+  lockedAt    DateTime?          @db.Timestamptz(3)
+  lockToken   String?
+  processedAt DateTime?          @db.Timestamptz(3)
+  lastError   String?
+  createdAt   DateTime           @default(now()) @db.Timestamptz(3)
+
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  customer User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking  Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, availableAt, createdAt, id])
+  @@index([status, lockedAt])
+  @@index([eventId])
+  @@index([customerId])
+  @@map("notification_jobs")
+}

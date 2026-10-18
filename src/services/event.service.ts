@@ -1,6 +1,7 @@
 import createHttpError from "http-errors";
 import { prisma } from "../database/database.js";
 import { Prisma, type Event } from "../generated/prisma/client.js";
+import { queueEventUpdate } from "../notifications/notification.queue.js";
 import type {
   BrowseEventsQuery,
   CreateEventInput,
@@ -135,7 +136,15 @@ export async function updateEvent(eventId: string, organizerId: string, input: U
       throw createHttpError(409, "Capacity cannot be lower than the number of tickets already sold");
     }
 
-    return tx.event.update({
+    const changed = Object.entries(input).some(([key, value]) => {
+      const previous = event[key as keyof UpdateEventInput];
+      return value instanceof Date && previous instanceof Date
+        ? value.getTime() !== previous.getTime()
+        : value !== previous;
+    });
+    if (!changed) return event;
+
+    const updated = await tx.event.update({
       where: { id: eventId },
       data: {
         ...input,
@@ -143,6 +152,8 @@ export async function updateEvent(eventId: string, organizerId: string, input: U
         ...(input.capacity !== undefined ? { remainingTickets: capacity - soldTickets } : {}),
       },
     });
+    await queueEventUpdate(tx, updated);
+    return updated;
   });
 }
 
@@ -151,9 +162,10 @@ export async function cancelEvent(eventId: string, organizerId: string): Promise
     const event = await lockOwnedEvent(tx, eventId, organizerId);
     if (event.deletedAt) return;
 
-    await tx.event.update({
+    const cancelled = await tx.event.update({
       where: { id: eventId },
       data: { status: "CANCELLED", deletedAt: new Date() },
     });
+    await queueEventUpdate(tx, cancelled);
   });
 }

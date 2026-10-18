@@ -2,6 +2,7 @@ import createHttpError from "http-errors";
 import { prisma } from "../database/database.js";
 import { Prisma, type Event } from "../generated/prisma/client.js";
 import type { CreateBookingInput, ListBookingsQuery } from "../schemas/booking.schema.js";
+import { queueBookingConfirmation } from "../notifications/notification.queue.js";
 
 const bookingInclude = {
   event: {
@@ -80,6 +81,7 @@ export async function createBooking(customerId: string, input: CreateBookingInpu
         },
         include: bookingInclude,
       });
+      await queueBookingConfirmation(tx, booking, event);
       return { booking, created: true };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   } catch (error) {

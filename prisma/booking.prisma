@@ -12,8 +12,9 @@ model Booking {
   createdAt      DateTime  @default(now()) @db.Timestamptz(3)
   deletedAt      DateTime? @db.Timestamptz(3)
 
-  customer User  @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Restrict)
-  event    Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  customer        User             @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Restrict)
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  notificationJob NotificationJob?
 
   @@unique([customerId, idempotencyKey])
   @@index([customerId, createdAt, id])

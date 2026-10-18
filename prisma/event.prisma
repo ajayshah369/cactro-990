@@ -23,8 +23,9 @@ model Event {
   updatedAt        DateTime    @updatedAt @db.Timestamptz(3)
   deletedAt        DateTime?   @db.Timestamptz(3)
 
-  organizer User      @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Restrict)
-  bookings  Booking[]
+  organizer        User              @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Restrict)
+  bookings         Booking[]
+  notificationJobs NotificationJob[]
 
   @@index([organizerId, createdAt, id])
   @@index([status, startsAt, id])

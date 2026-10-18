@@ -116,7 +116,7 @@ export const openApiDocument: OpenAPIV3.Document = {
       "Create and manage events as an ORGANIZER, or browse and book tickets as a CUSTOMER.",
       "**Using this page:** execute POST /auth/login (or /auth/register) first. The browser stores the HTTP-only cookie and sends it on subsequent requests. You do not need to enter a JWT in the Authorize dialog. Use /auth/me to check the current account and /auth/logout to switch accounts.",
       "Open this page on the same origin configured in BE_URL; production requires HTTPS for Secure cookies. Prices and totals are integer minor units (5000 paise = INR 50).",
-      "Booking confirmation and event-update emails are not implemented yet.",
+      "Booking confirmations and event updates queue background notifications. Run the separate notification worker to log simulated messages; no real emails are sent.",
     ].join("\n\n"),
   },
   servers: [{ url: "/", description: "This API server" }],
@@ -235,7 +235,7 @@ export const openApiDocument: OpenAPIV3.Document = {
       },
       patch: {
         tags: ["Organizer events"], operationId: "updateEvent", summary: "Update your event",
-        description: "Preserves sold tickets and existing booking prices. Cancelled events cannot be edited.",
+        description: "Preserves sold tickets and existing booking prices. Changed details queue one background notification per active customer with a booking. Unchanged values do not queue notifications. Cancelled events cannot be edited.",
         security: cookieSecurity, requestBody: body("UpdateEventInput", { capacity: 150, ticketPrice: 7500 }),
         responses: {
           "200": response("EventResponse", "Event updated."), "400": invalidInput, ...protectedErrors,
@@ -244,7 +244,7 @@ export const openApiDocument: OpenAPIV3.Document = {
       },
       delete: {
         tags: ["Organizer events"], operationId: "cancelEvent", summary: "Cancel your event",
-        description: "Marks the event CANCELLED and sets deletedAt. Preserves bookings. Repeated cancellation returns 204.",
+        description: "Marks the event CANCELLED and sets deletedAt. Preserves bookings and queues a background notification per active customer with a booking. Repeated cancellation returns 204 without queuing more notifications.",
         security: cookieSecurity,
         responses: { "204": { description: "Event cancelled. No response body." }, "400": invalidInput, ...protectedErrors, "404": error("Event not found.") },
       },
@@ -258,7 +258,7 @@ export const openApiDocument: OpenAPIV3.Document = {
       },
       post: {
         tags: ["Customer bookings"], operationId: "createBooking", summary: "Book tickets",
-        description: "Replace eventId with a real ID from GET /events. Reservations and booking creation commit together. Repeating the same customer/key/event/quantity returns the original booking with 200; different details with the same key return 409. Successful retries also work after an event sells out or is cancelled.",
+        description: "Replace eventId with a real ID from GET /events. Inventory, booking creation, and a confirmation notification job commit together. Repeating the same customer/key/event/quantity returns the original booking with 200 without another notification job; different details with the same key return 409. Successful retries also work after an event sells out or is cancelled. Notifications are currently logged by the separate worker.",
         security: cookieSecurity,
         requestBody: body("CreateBookingInput", { eventId: "cmvdkgkcm0003e7oz2n210nr9", quantity: 2, idempotencyKey: "checkout-001" }),
         responses: {
